@@ -1,0 +1,581 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║   WIDGET ECONÓMICO — PIB · PER CÁPITA · ÍNDICE IPAC         ║
+  ║   Autor: Armando D. Núñez Chung                             ║
+  ║   AST System Computer Technology | RUC 8-844-2003 DV:55     ║
+  ║   ast-pty.com | Marzo 2026                                  ║
+  ║                                                              ║
+  ║   INSTRUCCIONES DE INSTALACIÓN EN HORIZON / HTML:           ║
+  ║   1. Copia TODO el contenido entre las marcas               ║
+  ║      ═══ INICIO WIDGET ═══  y  ═══ FIN WIDGET ═══          ║
+  ║   2. En Horizon: Agregar bloque → "HTML personalizado"       ║
+  ║      y pega el código                                       ║
+  ║   3. Chart.js se carga automáticamente desde CDN            ║
+  ║   4. No requiere ningún plugin adicional                    ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<!-- ═══════════════════════ INICIO WIDGET ═══════════════════════ -->
+<div id="ast-eco-widget">
+<style>
+#ast-eco-widget {
+  --azul:    #0A2240;
+  --azul2:   #0D3A6B;
+  --dorado:  #D4A017;
+  --doradoc: #F5C842;
+  --rojo:    #C62828;
+  --verde:   #1a7a3c;
+  --azulm:   #1565C0;
+  --gris:    #f5f7fb;
+  --grisl:   #e8eaf0;
+  --texto:   #555;
+  --sub:     #8A9BB0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 16px 60px;
+  box-sizing: border-box;
+  color: #1a1a2e;
+}
+#ast-eco-widget *, #ast-eco-widget *::before, #ast-eco-widget *::after { box-sizing: inherit; }
+
+/* ── encabezado ── */
+.ast-head { text-align: center; padding: 48px 0 36px; }
+.ast-head .ast-kicker {
+  display: inline-block;
+  font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dorado); background: rgba(212,160,23,.1);
+  border: 1px solid rgba(212,160,23,.3); border-radius: 100px;
+  padding: 5px 16px; margin-bottom: 18px;
+}
+.ast-head h2 {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800; color: var(--azul);
+  letter-spacing: -.02em; line-height: 1.1; margin: 0 0 12px;
+}
+.ast-head p { font-size: .97rem; color: var(--texto); line-height: 1.75; max-width: 640px; margin: 0 auto; }
+
+/* ── tabs nav ── */
+.ast-tabs {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 32px; border-bottom: 1px solid var(--grisl);
+  padding-bottom: 0;
+}
+.ast-tab {
+  padding: 10px 22px;
+  border: none; background: transparent;
+  font-size: .88rem; font-weight: 600;
+  color: var(--sub); cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  transition: color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.ast-tab:hover { color: var(--azul); }
+.ast-tab.on { color: var(--azul); border-bottom-color: var(--dorado); }
+
+/* ── panels ── */
+.ast-panel { display: none; animation: astFadeUp .35s ease both; }
+.ast-panel.on { display: block; }
+@keyframes astFadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── stat cards grid ── */
+.ast-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 28px;
+}
+.ast-stat {
+  background: var(--gris); border-radius: 14px;
+  padding: 20px; transition: box-shadow .2s, transform .2s;
+}
+.ast-stat:hover { box-shadow: 0 8px 28px rgba(10,34,64,.09); transform: translateY(-2px); }
+.ast-stat.dark { background: var(--azul); }
+.ast-stat .slbl {
+  font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--sub); margin-bottom: 6px; font-weight: 600;
+}
+.ast-stat.dark .slbl { color: rgba(255,255,255,.5); }
+.ast-stat .sval {
+  font-size: 1.75rem; font-weight: 800; line-height: 1.1;
+  color: var(--azul); letter-spacing: -.02em;
+}
+.ast-stat.dark .sval { color: var(--doradoc); }
+.ast-stat .sval.red { color: var(--rojo); }
+.ast-stat .sval.grn { color: var(--verde); }
+.ast-stat .ssub { font-size: .78rem; color: #999; margin-top: 5px; }
+.ast-stat.dark .ssub { color: rgba(255,255,255,.45); }
+
+/* ── legend ── */
+.ast-legend {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  margin-bottom: 12px; font-size: .78rem; color: #888;
+}
+.ast-legend span { display: flex; align-items: center; gap: 6px; }
+.ast-legend i { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.ast-legend i.dash { background: repeating-linear-gradient(90deg,currentColor 0,currentColor 4px,transparent 4px,transparent 8px); }
+
+/* ── chart wrapper ── */
+.ast-chart { position: relative; width: 100%; }
+
+/* ── notas ── */
+.ast-note {
+  font-size: .76rem; color: #aaa; margin-top: 14px; line-height: 1.65;
+  border-left: 3px solid var(--grisl); padding-left: 12px;
+}
+
+/* ── IPAC formula box ── */
+.ast-formula {
+  background: linear-gradient(135deg, var(--azul) 0%, var(--azul2) 100%);
+  border-radius: 18px; padding: 30px 32px; margin-bottom: 24px; color: #fff;
+}
+.ast-formula .fkicker {
+  font-size: .66rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--doradoc); margin-bottom: 10px; font-weight: 700;
+}
+.ast-formula h3 { font-size: 1.25rem; font-weight: 800; margin: 0 0 14px; color: #fff; }
+.ast-formula code {
+  display: block; background: rgba(0,0,0,.28); border-radius: 10px;
+  padding: 15px 18px; font-size: .85rem; color: var(--doradoc);
+  line-height: 1.9; font-family: 'Consolas','DM Mono',monospace;
+  word-break: break-word;
+}
+.ast-formula p { margin: 14px 0 0; color: rgba(255,255,255,.72); font-size: .88rem; line-height: 1.75; }
+.ast-formula strong { color: #fff; }
+
+/* ── progress bar ── */
+.ast-prog-wrap { margin: 4px 0 18px; }
+.ast-prog-lbl { font-size: .72rem; color: var(--sub); margin-bottom: 6px; letter-spacing: .06em; text-transform: uppercase; }
+.ast-prog-track { height: 8px; background: var(--grisl); border-radius: 4px; overflow: hidden; }
+.ast-prog-fill { height: 100%; border-radius: 4px; background: var(--dorado); transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+/* ── firma autoría ── */
+.ast-firma {
+  margin-top: 36px; padding: 20px 24px;
+  background: var(--gris); border-radius: 14px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  font-size: .8rem; color: #888;
+  border-left: 4px solid var(--dorado);
+}
+.ast-firma strong { color: var(--azul); font-size: .9rem; display: block; margin-bottom: 2px; }
+.ast-firma a { color: var(--azulm); text-decoration: none; }
+.ast-firma a:hover { text-decoration: underline; }
+
+.ast-slider-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: 10px;
+  background: var(--gris); margin-bottom: 8px;
+  transition: background .2s;
+}
+.ast-slider-row:hover { background: var(--grisl); }
+.ast-slider-row label {
+  min-width: 190px; font-size: .86rem; color: var(--texto); font-weight: 500; flex-shrink: 0;
+}
+.ast-slider-row input[type=range] { flex: 1; accent-color: var(--azul); cursor: pointer; }
+.ast-slider-val { min-width: 40px; text-align: right; font-size: .88rem; font-weight: 700; color: var(--azul); }
+.ast-slider-w   { min-width: 36px; text-align: right; font-size: .72rem; color: var(--sub); }
+
+@media (max-width: 600px) {
+  .ast-tabs { gap: 4px; }
+  .ast-tab { padding: 8px 12px; font-size: .8rem; }
+  .ast-formula { padding: 22px 18px; }
+  .ast-slider-row { flex-wrap: wrap; }
+  .ast-slider-row label { min-width: 100%; }
+}
+</style>
+
+<!-- ── ENCABEZADO ── -->
+<div class="ast-head">
+  <div class="ast-kicker">Análisis Económico · Panamá 2026</div>
+  <h2>PIB · Per Cápita · Índice IPAC</h2>
+  <p>Comparativa del PIB histórico y PIB per cápita frente a la proyección con el paquete de reformas, más el IPAC — nueva métrica de poder adquisitivo ciudadano creada por Armando D. Núñez Chung.</p>
+</div>
+
+<!-- ── TABS NAV ── -->
+<div class="ast-tabs" role="tablist">
+  <button class="ast-tab on" onclick="astTab('pib',this)" role="tab">PIB 2015–2035</button>
+  <button class="ast-tab" onclick="astTab('cap',this)" role="tab">PIB Per Cápita</button>
+  <button class="ast-tab" onclick="astTab('ipac',this)" role="tab">Índice IPAC</button>
+  <button class="ast-tab" onclick="astTab('sim',this)" role="tab">⚙️ Simulador de reforma</button>
+</div>
+
+<!-- ════════ PANEL PIB ════════ -->
+<div id="ast-pib" class="ast-panel on" role="tabpanel">
+  <div class="ast-stats">
+    <div class="ast-stat">
+      <div class="slbl">PIB 2024 (real)</div>
+      <div class="sval">B/.75.3B</div>
+      <div class="ssub">Fuente: MEF / INEC 2024</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">Sin reforma — 2035</div>
+      <div class="sval red">B/.105.7B</div>
+      <div class="ssub">Trayectoria base FMI +3.1%/año</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">Con reformas — 2035</div>
+      <div class="sval grn">B/.148B</div>
+      <div class="ssub">Estimación con paquete completo</div>
+    </div>
+    <div class="ast-stat dark">
+      <div class="slbl">Ganancia adicional</div>
+      <div class="sval">+B/.42.3B</div>
+      <div class="ssub">Diferencia vs. escenario base</div>
+    </div>
+  </div>
+  <div class="ast-legend">
+    <span><i style="background:#0A2240;"></i>PIB histórico</span>
+    <span><i style="background:#6b8cba;"></i>Sin reforma</span>
+    <span><i style="background:#D4A017;"></i>Con reformas</span>
+  </div>
+  <div class="ast-chart" style="height:300px;"><canvas id="ast-c-pib"></canvas></div>
+  <p class="ast-note">Datos históricos: INEC, MEF, Banco Mundial 2015–2024. Proyección 2025–2035: tasa base FMI (+3.1%/año) vs. tasa con reformas Austriacas (+6.8%/año). Crecimiento adicional derivado de reducción de informalidad (47.1%→&lt;30%), baja de cargas laborales (26.5%→20%) y reforma judicial (-1.2% costo de transacción del PIB). Valores en miles de millones de Balboas corrientes.</p>
+</div>
+
+<!-- ════════ PANEL PER CÁPITA ════════ -->
+<div id="ast-cap" class="ast-panel" role="tabpanel">
+  <div class="ast-stats">
+    <div class="ast-stat">
+      <div class="slbl">Per cápita 2024</div>
+      <div class="sval">B/.17,200</div>
+      <div class="ssub">≈ $17,200 USD · Fuente: INEC</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">Sin reforma — 2035</div>
+      <div class="sval red">B/.23,800</div>
+      <div class="ssub">Trayectoria actual</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">Con reformas — 2035</div>
+      <div class="sval grn">B/.36,400</div>
+      <div class="ssub">Objetivo paquete completo</div>
+    </div>
+    <div class="ast-stat dark">
+      <div class="slbl">Ganancia / ciudadano</div>
+      <div class="sval">+B/.12,600</div>
+      <div class="ssub">Por persona vs. escenario base</div>
+    </div>
+  </div>
+  <div class="ast-legend">
+    <span><i style="background:#0A2240;"></i>Histórico</span>
+    <span><i style="background:#6b8cba;"></i>Sin reforma</span>
+    <span><i style="background:#D4A017;"></i>Con reformas</span>
+    <span><i style="background:#1a7a3c;"></i>Chile (referencia)</span>
+  </div>
+  <div class="ast-chart" style="height:300px;"><canvas id="ast-c-cap"></canvas></div>
+  <p class="ast-note">El PIB per cápita no refleja distribución del ingreso. Panamá tiene un coeficiente Gini de ~0.49, uno de los más altos de América Latina. El escenario con reformas asume reducción del Gini a ~0.38 por formalización masiva, acceso ampliado a seguridad social y reducción del desempleo del 10.4% al 3.5%.</p>
+</div>
+
+<!-- ════════ PANEL IPAC ════════ -->
+<div id="ast-ipac" class="ast-panel" role="tabpanel">
+
+  <div class="ast-formula">
+    <div class="fkicker">Propuesta autoral original · Armando D. Núñez Chung · AST System · Marzo 2026</div>
+    <h3>IPAC — Índice de Poder Adquisitivo del Ciudadano</h3>
+    <code>IPAC = (Ingreso_mediano_real × (1 − Carga_fiscal_efectiva)) ÷ CPC_ajustada</code>
+    <p>
+      Donde <strong>CPC_ajustada</strong> = Costo Per Cápita de Vida Digna (canasta básica + vivienda + salud + educación + movilidad) ajustado por PPP local.<br><br>
+      <strong>Rango:</strong> 0 → 1.0+. Un IPAC de 0.41 significa que el ciudadano mediano puede costear el 41% de una vida digna con su ingreso neto después de impuestos. A diferencia del PIB per cápita —que divide la producción total entre habitantes sin importar quién recibe ese ingreso— el IPAC usa el ingreso <em>mediano real</em> y mide el poder de compra efectivo del ciudadano del percentil 50.
+    </p>
+  </div>
+
+  <div class="ast-stats">
+    <div class="ast-stat">
+      <div class="slbl">IPAC Panamá 2024</div>
+      <div class="sval red">0.41</div>
+      <div class="ssub">Ciudadano cubre 41% de vida digna</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">IPAC Chile 2024</div>
+      <div class="sval" style="color:var(--azulm);">0.61</div>
+      <div class="ssub">Referencia regional</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">IPAC Singapur 2024</div>
+      <div class="sval grn">0.89</div>
+      <div class="ssub">Referencia global</div>
+    </div>
+    <div class="ast-stat dark">
+      <div class="slbl">IPAC objetivo 2035</div>
+      <div class="sval">0.72</div>
+      <div class="ssub">Con paquete de reformas</div>
+    </div>
+  </div>
+
+  <div class="ast-prog-wrap">
+    <div class="ast-prog-lbl">Progreso de Panamá hacia el objetivo IPAC 0.72</div>
+    <div class="ast-prog-track">
+      <div class="ast-prog-fill" style="width:0%" id="ast-prog"></div>
+    </div>
+    <div id="ast-prog-txt" style="font-size:.78rem;color:#888;margin-top:5px;"></div>
+  </div>
+
+  <div class="ast-legend">
+    <span><i style="background:#0A2240;"></i>Panamá histórico &amp; real</span>
+    <span><i style="background:#D4A017;"></i>Panamá proyectado con reformas</span>
+    <span><i style="background:#1a7a3c;"></i>Referencias internacionales</span>
+  </div>
+  <div class="ast-chart" style="height:280px;"><canvas id="ast-c-ipac"></canvas></div>
+  <p class="ast-note">Propuesta autoral original de Armando D. Núñez Chung, basada en la crítica austriaca al PIB como métrica de bienestar (Mises: el cálculo económico mide preferencias individuales, no agregados nacionales). El IPAC incorpora: ingreso mediano INEC, cargas fiscales efectivas CSS+IR+ITBMS, y la canasta de vida digna calculada con datos ACODECO y BM. Marzo 2026.</p>
+</div>
+
+<!-- ════════ PANEL SIMULADOR ════════ -->
+<div id="ast-sim" class="ast-panel" role="tabpanel">
+
+  <div style="background:var(--gris);border-radius:16px;padding:22px 26px;margin-bottom:24px;border-left:4px solid var(--dorado);">
+    <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dorado);font-weight:700;margin-bottom:8px;">Simulador de impacto económico</div>
+    <p style="font-size:.9rem;color:var(--texto);margin:0;line-height:1.7;">Ajusta la intensidad de implementación de cada reforma (0–100%) y observa en tiempo real el impacto estimado en PIB, empleo formal e IPAC al año 2035. Las ponderaciones reflejan la elasticidad relativa de cada área sobre el crecimiento.</p>
+  </div>
+
+  <div id="ast-sliders" style="margin-bottom:28px;"></div>
+
+  <div class="ast-stats">
+    <div class="ast-stat">
+      <div class="slbl">PIB 2035 estimado</div>
+      <div class="sval grn" id="as-pib">—</div>
+      <div class="ssub">vs. B/.75.3B hoy</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">Empleo formal adicional</div>
+      <div class="sval grn" id="as-emp">—</div>
+      <div class="ssub">sobre línea base actual</div>
+    </div>
+    <div class="ast-stat">
+      <div class="slbl">IPAC proyectado 2035</div>
+      <div class="sval" style="color:var(--dorado);" id="as-ipac">—</div>
+      <div class="ssub">vs. 0.41 actual</div>
+    </div>
+    <div class="ast-stat dark">
+      <div class="slbl">Crecimiento anual</div>
+      <div class="sval" id="as-crec">—</div>
+      <div class="ssub">vs. 3.1% base FMI</div>
+    </div>
+  </div>
+
+  <div style="margin:4px 0 24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+      <span style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);font-weight:600;">Progreso hacia IPAC objetivo 0.72</span>
+      <span id="as-pct-lbl" style="font-size:.82rem;font-weight:700;color:var(--azul);">—</span>
+    </div>
+    <div style="height:10px;background:var(--grisl);border-radius:5px;overflow:hidden;">
+      <div id="as-prog" style="height:100%;background:var(--dorado);border-radius:5px;width:0%;transition:width .5s cubic-bezier(.4,0,.2,1);"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.72rem;color:#bbb;">
+      <span>0.41 actual</span><span>0.72 objetivo</span>
+    </div>
+  </div>
+
+  <div class="ast-legend">
+    <span><i style="background:#6b8cba;"></i>Sin reforma</span>
+    <span><i style="background:#D4A017;"></i>Con nivel de reforma ajustado</span>
+  </div>
+  <div class="ast-chart" style="height:260px;"><canvas id="ast-c-sim"></canvas></div>
+
+  <p class="ast-note">Modelo de estimación basado en elasticidades empleo-regulación (Banco Mundial 2023), impacto fiscal de reducción de cargas en formalización (CEPAL 2024) y retorno educativo proyectado (IADB 2024). Ponderaciones: Laboral 28%, Fiscal 22%, Judicial 18%, Educación 16%, Salud 16%. Las proyecciones son ilustrativas. Armando D. Núñez Chung — AST System, Marzo 2026.</p>
+</div>
+
+<!-- ── FIRMA AUTORÍA ── -->
+<div class="ast-firma">
+  <div>
+    <strong>Armando D. Núñez Chung</strong>
+    AST System Computer Technology · RUC 8-844-2003 DV:55 · Colinas de Pacora, Panamá
+  </div>
+  <a href="https://www.ast-pty.com" target="_blank">🌐 ast-pty.com</a>
+</div>
+
+<!-- ════════ CHART.JS ════════ -->
+<script>
+(function() {
+  function loadChartJS(cb) {
+    if (window.Chart) { cb(); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+    s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  var gc = 'rgba(0,0,0,0.055)', tc = '#999';
+  var yr = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026,2027,2028,2029,2030,2031,2032,2033,2034,2035];
+  var N = null;
+
+  /* PIB data */
+  var pH = [46.8,49.9,53.0,56.8,60.1,44.8,50.1,60.7,68.1,75.3,N,N,N,N,N,N,N,N,N,N,N];
+  var pB = [N,N,N,N,N,N,N,N,N,75.3,77.6,80.0,82.5,85.1,87.7,90.5,93.4,96.3,99.4,102.5,105.7];
+  var pR = [N,N,N,N,N,N,N,N,N,75.3,81.8,88.7,96.1,104.2,112.9,122.3,132.5,143.5,148.0,148.0,148.0];
+
+  /* Per cápita data */
+  var cH = [13200,13800,14400,15100,15600,11400,12800,15200,16600,17200,N,N,N,N,N,N,N,N,N,N,N];
+  var cB = [N,N,N,N,N,N,N,N,N,17200,17700,18200,18700,19300,19900,20500,21100,21700,22400,23100,23800];
+  var cR = [N,N,N,N,N,N,N,N,N,17200,18400,19700,21100,22600,24200,25900,27700,29600,32000,34000,36400];
+  var cC = [13800,14200,14600,15100,14800,12900,14200,16100,17400,17800,18200,18700,19200,19800,20400,21000,21700,22400,23100,23900,24700];
+
+  /* IPAC bar data */
+  var iL = ['Panamá 2020','Panamá 2024','Costa Rica','Colombia','Chile','Singapur','Panamá 2030','Panamá 2035'];
+  var iV = [0.36,0.41,0.52,0.47,0.61,0.89,0.58,0.72];
+  var iC = ['#0A2240','#C62828','#1a7a3c','#1a7a3c','#1a7a3c','#1a7a3c','#D4A017','#D4A017'];
+
+  var charts = {};
+
+  function axes(cbX, cbY) {
+    return {
+      x: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, callback: cbX || undefined } },
+      y: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, callback: cbY || undefined } }
+    };
+  }
+
+  function make(id, cfg) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+    charts[id] = new Chart(el, cfg);
+  }
+
+  function buildPIB() {
+    make('ast-c-pib', {
+      type: 'line',
+      data: { labels: yr, datasets: [
+        { data: pH, borderColor: '#0A2240', backgroundColor: 'rgba(10,34,64,.07)', fill: true, tension: .35, pointRadius: 2, borderWidth: 2, spanGaps: false },
+        { data: pB, borderColor: '#6b8cba', borderDash: [6,4], tension: .35, pointRadius: 0, borderWidth: 1.5, spanGaps: false },
+        { data: pR, borderColor: '#D4A017', tension: .35, pointRadius: 0, borderWidth: 2.5, spanGaps: false }
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return ' B/.'+c.parsed.y+'B'; } } } },
+        scales: {
+          x: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, maxTicksLimit: 8 } },
+          y: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, callback: function(v) { return 'B/.'+v+'B'; } } }
+        }
+      }
+    });
+  }
+
+  function buildCap() {
+    make('ast-c-cap', {
+      type: 'line',
+      data: { labels: yr, datasets: [
+        { data: cH, borderColor: '#0A2240', backgroundColor: 'rgba(10,34,64,.07)', fill: true, tension: .35, pointRadius: 2, borderWidth: 2, spanGaps: false },
+        { data: cB, borderColor: '#6b8cba', borderDash: [6,4], tension: .35, pointRadius: 0, borderWidth: 1.5, spanGaps: false },
+        { data: cR, borderColor: '#D4A017', tension: .35, pointRadius: 0, borderWidth: 2.5, spanGaps: false },
+        { data: cC, borderColor: '#1a7a3c', borderDash: [2,4], tension: .35, pointRadius: 0, borderWidth: 1.5, spanGaps: false }
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return ' B/.'+Math.round(c.parsed.y).toLocaleString('es-PA'); } } } },
+        scales: {
+          x: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, maxTicksLimit: 8 } },
+          y: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, callback: function(v) { return 'B/.'+Math.round(v/1000)+'k'; } } }
+        }
+      }
+    });
+  }
+
+  function buildIPAC() {
+    make('ast-c-ipac', {
+      type: 'bar',
+      data: { labels: iL, datasets: [{ data: iV, backgroundColor: iC, borderRadius: 7, borderSkipped: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return ' IPAC: '+c.parsed.y.toFixed(2); } } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: tc, font: { size: 11 }, maxRotation: 20 } },
+          y: { grid: { color: gc }, min: 0, max: 1, ticks: { color: tc, font: { size: 11 }, callback: function(v) { return v.toFixed(1); } } }
+        }
+      }
+    });
+    /* Progress bar: current 0.41, target 0.72 */
+    var pct = Math.round((0.41 - 0.20) / (0.72 - 0.20) * 100);
+    setTimeout(function() {
+      document.getElementById('ast-prog').style.width = pct + '%';
+      document.getElementById('ast-prog-txt').textContent = 'Actual: 0.41 — Objetivo 2035: 0.72 — ' + pct + '% del camino recorrido';
+    }, 200);
+  }
+
+  /* ── SIMULADOR ── */
+  var reforms = [
+    { n: 'Reforma laboral / salario mínimo', w: 0.28, v: 80 },
+    { n: 'Reforma fiscal / cargas CSS',      w: 0.22, v: 70 },
+    { n: 'Reforma judicial / anticorrupción',w: 0.18, v: 60 },
+    { n: 'Reforma educativa',                w: 0.16, v: 50 },
+    { n: 'Reforma de salud / IA hospitalaria',w:0.16, v: 55 }
+  ];
+
+  function buildSliders() {
+    var sc = document.getElementById('ast-sliders');
+    if (!sc || sc.children.length > 0) return;
+    reforms.forEach(function(r, i) {
+      var row = document.createElement('div');
+      row.className = 'ast-slider-row';
+      row.innerHTML =
+        '<label for="asl' + i + '">' + r.n + '</label>' +
+        '<input type="range" id="asl' + i + '" min="0" max="100" value="' + r.v + '" oninput="astSimCalc()">' +
+        '<span class="ast-slider-val" id="asv' + i + '">' + r.v + '%</span>' +
+        '<span class="ast-slider-w">×' + (r.w * 100).toFixed(0) + '%</span>';
+      sc.appendChild(row);
+    });
+  }
+
+  window.astSimCalc = function() {
+    var gc2 = 'rgba(0,0,0,0.055)', tc2 = '#999';
+    var vv = reforms.map(function(r, i) {
+      var el = document.getElementById('asl' + i);
+      var v = el ? parseInt(el.value) : r.v;
+      var lbl = document.getElementById('asv' + i);
+      if (lbl) lbl.textContent = v + '%';
+      return v / 100;
+    });
+    var score = reforms.reduce(function(s, r, i) { return s + r.w * vv[i]; }, 0);
+    var p35   = Math.round(75.3 * Math.pow(1.031 + score * 0.038, 11) * 10) / 10;
+    var emp   = Math.round(score * 390000);
+    var ipac  = Math.round((0.41 + score * 0.31) * 100) / 100;
+    var crec  = (3.1 + score * 3.7).toFixed(1);
+    var pct   = Math.min(Math.round((ipac - 0.41) / (0.72 - 0.41) * 100), 100);
+
+    document.getElementById('as-pib').textContent  = 'B/.' + p35 + 'B';
+    document.getElementById('as-emp').textContent  = '+' + emp.toLocaleString('es-PA');
+    document.getElementById('as-ipac').textContent = ipac.toFixed(2);
+    document.getElementById('as-crec').textContent = '+' + crec + '%';
+    document.getElementById('as-prog').style.width = pct + '%';
+    document.getElementById('as-pct-lbl').textContent = pct + '% del objetivo alcanzado';
+
+    var ys   = [2024, 2026, 2028, 2030, 2032, 2035];
+    var base = ys.map(function(y) { return Math.round(75.3 * Math.pow(1.031, y - 2024) * 10) / 10; });
+    var proj = ys.map(function(y) { return Math.round(75.3 * Math.pow(1.031 + score * 0.038, y - 2024) * 10) / 10; });
+
+    make('ast-c-sim', {
+      type: 'line',
+      data: { labels: ys, datasets: [
+        { label: 'Sin reforma', data: base, borderColor: '#6b8cba', borderDash: [6,4], tension: .35, pointRadius: 3, borderWidth: 1.5 },
+        { label: 'Con reforma', data: proj, borderColor: '#D4A017', tension: .35, pointRadius: 3, borderWidth: 2.5,
+          backgroundColor: 'rgba(212,160,23,.08)', fill: true }
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return ' B/.' + c.parsed.y + 'B'; } } } },
+        scales: {
+          x: { grid: { color: gc2 }, ticks: { color: tc2, font: { size: 11 } } },
+          y: { grid: { color: gc2 }, ticks: { color: tc2, font: { size: 11 }, callback: function(v) { return 'B/.' + v + 'B'; } } }
+        }
+      }
+    });
+  };
+
+  /* Tab switcher */
+  window.astTab = function(id, btn) {
+    document.querySelectorAll('.ast-panel').forEach(function(p) { p.classList.remove('on'); });
+    document.querySelectorAll('.ast-tab').forEach(function(b) { b.classList.remove('on'); });
+    document.getElementById('ast-' + id).classList.add('on');
+    btn.classList.add('on');
+    loadChartJS(function() {
+      if (id === 'pib')  buildPIB();
+      else if (id === 'cap')  buildCap();
+      else if (id === 'ipac') buildIPAC();
+      else if (id === 'sim')  { buildSliders(); astSimCalc(); }
+    });
+  };
+
+  /* Init first tab */
+  loadChartJS(buildPIB);
+})();
+</script>
+</div>
+<!-- ════════════════════════ FIN WIDGET ════════════════════════ -->
