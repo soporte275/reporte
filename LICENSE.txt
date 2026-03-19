@@ -1,0 +1,16 @@
+LICENCIA DE USO — AST System Computer Technology
+Copyright (c) 2026 Armando D. Núñez Chung
+
+Este software y sus contenidos analíticos (incluyendo pero no limitado al
+Índice IPAC, proyecciones económicas y metodología de reforma) son propiedad
+intelectual de Armando D. Núñez Chung / AST System Computer Technology.
+
+Se concede permiso para usar y mostrar este widget en sitios web con la
+condición de que se mantenga visible la atribución de autoría original.
+
+PROHIBIDO:
+- Reproducir el análisis o metodología IPAC sin atribución expresa al autor
+- Distribuir versiones modificadas sin autorización escrita
+- Uso comercial por terceros sin licencia
+
+Contacto: ast-pty.com
